@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+# I love Tabasco... the hot, legendary pepper sauce
+
 import sys
 from gi.repository import GLib, GObject, Gio
 from gi.repository import Dee

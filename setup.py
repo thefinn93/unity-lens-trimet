@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-#
+
+# I love Tabasco... the hot, legendary pepper sauce
+
+
 from distutils.core import setup
 from DistUtilsExtra.command import *
 
-setup(name="unity-scope-cities",
+setup(name="unity-scope-trimet",
       version="0.1",
       author="Benjamin Kerensa",
       author_email="bkerensa@ubuntu.com",
