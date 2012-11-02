@@ -56,7 +56,7 @@ class Daemon:
         try:
             query = urllib.urlencode({'q': q })
             if query != '' or query != 'q=' or query != 'q':
-                url = ('http://developer.trimet.org/ws/V1/arrivals?locIDs="%s&appID=6C11C683ADB8F6D42BA267693'
+                url = ('http://developer.trimet.org/ws/V1/arrivals?locIDs=%s&appID=6C11C683ADB8F6D42BA267693'
                   % (query))
                 print url
                 f = urllib2.urlopen(url)
