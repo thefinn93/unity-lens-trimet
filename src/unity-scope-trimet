@@ -1,0 +1,94 @@
+#! /usr/bin/python
+
+import sys
+from gi.repository import GLib, GObject, Gio
+from gi.repository import Dee
+_m = dir(Dee.SequenceModel)
+from gi.repository import Unity
+import socket, urllib, urllib2, simplejson
+import locale
+import os
+from PIL import Image
+
+socket.setdefaulttimeout(1)
+BUS_NAME = "net.launchpad.scope.information.trimet"
+CACHE = "%s/unity-scope-trimet" % GLib.get_user_cache_dir()
+
+if not os.path.isdir(CACHE):
+    os.makedirs(CACHE)
+
+locale.setlocale(locale.LC_NUMERIC, '')
+global session_locale
+session_locale = locale.getlocale(locale.LC_NUMERIC)[0].split("_")[1]
+
+class Daemon:
+    def __init__ (self):
+        self.scope = Unity.Scope.new ("/net/launchpad/scope/information/trimet")
+        self.scope.search_in_global = True
+        self.scope.connect ("search-changed", self.on_search_changed)
+        self.scope.export()
+
+    def on_search_changed (self, scope, search=None, search_type=0, cancellable=None):
+        if search and search != '':
+            model = self.scope.props.global_results_model
+            model.clear()
+            search_string = search.props.search_string.strip()
+            if search_string:
+                if len(search_string) > 1 and search_type == Unity.SearchType.GLOBAL:
+                    print 'Search changed to %s' % search_string
+                    self.update_results_model (search_string, model)
+                    model.flush_revision_queue ()
+
+            search.finished()
+
+    def update_results_model(self, search, model):
+        if search and not search[0].isdigit() and not search.lower().find(" in ")  > -1:
+            self.stopid(search, model)
+            
+
+
+    # Trimet StopID Call
+
+
+    def weather_search(self, q):
+        try:
+            query = urllib.urlencode({'q': q })
+            if query != '' or query != 'q=' or query != 'q':
+                url = ('http://developer.trimet.org/ws/V1/arrivals?locIDs="%s&appID=6C11C683ADB8F6D42BA267693'
+                  % (query))
+                print url
+                f = urllib2.urlopen(url)
+                content = f.read()
+                results = simplejson.loads(content)
+                if results['data']:
+                    return results['data']
+                else:
+                    return
+            else:
+                return
+        except (IOError, urllib2.URLError, urllib2.HTTPError, simplejson.JSONDecodeError):
+            print "trimet is failwhale"
+            return
+
+    
+
+
+if __name__ == "__main__":
+    session_bus_connection = Gio.bus_get_sync (Gio.BusType.SESSION, None)
+    session_bus = Gio.DBusProxy.new_sync (session_bus_connection, 0, None,
+                                          'org.freedesktop.DBus',
+                                          '/org/freedesktop/DBus',
+                                          'org.freedesktop.DBus', None)
+    result = session_bus.call_sync('RequestName',
+                                   GLib.Variant ("(su)", (BUS_NAME, 0x4)),
+                                   0, -1, None)
+                                   
+    # Unpack variant response with signature "(u)". 1 means we got it.
+    result = result.unpack()[0]
+    
+    if result != 1 :
+        print >> sys.stderr, "Trimet Stop ID %s is Failwhale" % BUS_NAME
+        raise SystemExit (1)
+    
+    daemon = Daemon()
+    GObject.MainLoop().run()

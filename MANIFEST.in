@@ -1,0 +1,4 @@
+include unity-scope-trimet.service
+include trimet.scope
+include src/unity-scope-trimet
+include icons/*.png

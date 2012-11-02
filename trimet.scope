@@ -1,0 +1,3 @@
+[Scope]
+DBusName=net.launchpad.scope.information.trimet
+DBusPath=/net/launchpad/scope/information/trimet
